@@ -11,7 +11,7 @@ import { ethers } from "ethers";
 function getLibrary(provider) {
   try {
     const lib = new ethers.BrowserProvider(provider);
-    console.log("✅ BrowserProvider initialized:", lib);
+    console.log("BrowserProvider initialized:", lib);
     return lib;
   } catch (err) {
     console.error("Failed to initialize BrowserProvider:", err);
