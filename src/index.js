@@ -1,32 +1,29 @@
+// src/index.js
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 
 import { Web3ReactProvider } from "@web3-react/core";
-import { InjectedConnector } from "@web3-react/injected-connector";
 import { ethers } from "ethers";
 
-// 1. Set up Injected Connector (MetaMask)
-const injected = new InjectedConnector({
-  supportedChainIds: [1, 137, 80001], // Ethereum, Polygon, Mumbai
-});
-
-// 2. Required getLibrary function for Web3ReactProvider
+//Ethers v6-compatible BrowserProvider
 function getLibrary(provider) {
-  return new ethers.BrowserProvider(provider);
+  try {
+    const lib = new ethers.BrowserProvider(provider);
+    console.log("✅ BrowserProvider initialized:", lib);
+    return lib;
+  } catch (err) {
+    console.error("Failed to initialize BrowserProvider:", err);
+    return null;
+  }
 }
 
-// 3. Required connectors function (added in latest versions)
-const connectors = () => [[injected, {}]];
-
-// 4. Wrap your app with Web3ReactProvider properly
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <Web3ReactProvider connectors={connectors} getLibrary={getLibrary}>
+    <Web3ReactProvider getLibrary={getLibrary}>
       <App />
     </Web3ReactProvider>
   </React.StrictMode>
 );
-

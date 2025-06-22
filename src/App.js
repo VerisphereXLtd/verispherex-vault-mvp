@@ -2,15 +2,25 @@ import React, { useState, useEffect } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { InjectedConnector } from "@web3-react/injected-connector";
 import { ethers } from "ethers";
-import { CONTRACT_ADDRESS, ABI } from "./abi";
-import logo from "./assets/VXS.png";
 
+import useEthersSigner from "./hooks/useEthersSigner";
+import useVaultContract from "./hooks/useVaultContract";
+
+import logo from "./assets/MvpLogo3.png";
+
+// Define supported networks
 const injected = new InjectedConnector({
-  supportedChainIds: [1, 137, 80001, 11155111], // include Sepolia
+  supportedChainIds: [1, 137, 80001, 11155111], // Sepolia included
 });
 
 function App() {
-  const { activate, deactivate, active, account, library } = useWeb3React();
+  const { activate, deactivate, active, account, provider } = useWeb3React();
+  const signer = useEthersSigner();
+  console.log("Signer:", signer);
+  console.log("VaultContract:", vaultContract);
+  console.log("Account:", account);
+
+  const vaultContract = useVaultContract();
 
   const [balance, setBalance] = useState("0");
   const [ethBalance, setEthBalance] = useState("0");
@@ -53,18 +63,24 @@ function App() {
   }
 
   async function lockFunds() {
+    if (!vaultContract) {
+      console.warn("Vault contract not ready.");
+      alert("Vault contract not ready. Try reconnecting your wallet.");
+      return;
+    }
+
     if (!amountToLock || isNaN(amountToLock) || Number(amountToLock) <= 0) {
       alert("Enter a valid ETH amount");
       return;
     }
 
     setIsLoading(true);
+
     try {
-      const signer = await library.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      const tx = await contract.lock({
+      const tx = await vaultContract.lock({
         value: ethers.parseEther(amountToLock),
       });
+
       await tx.wait();
 
       const newTx = {
@@ -74,35 +90,42 @@ function App() {
       };
 
       saveTransactions([...transactions, newTx]);
-
       alert(`${amountToLock} ETH locked successfully!`);
       setAmountToLock("");
     } catch (err) {
       console.error("Locking failed", err);
-      alert("Transaction failed");
+      alert(err.reason || err.data?.message || err.message || "Transaction failed"); //Improved error handling
     }
+
     setIsLoading(false);
   }
 
   async function getBalance() {
     setIsLoading(true);
     try {
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, library);
-      const result = await contract.getLockedBalance();
+      if (!vaultContract) {
+        alert("Contract not ready");
+        return;
+      }
+
+      const result = await vaultContract.getLockedBalance();
       setBalance(ethers.formatEther(result));
     } catch (err) {
       console.error("Failed to fetch balance", err);
+      alert(err.reason || err.data?.message || err.message || "Error fetching balance"); //Error clarity
     }
     setIsLoading(false);
   }
 
   async function withdrawFunds() {
-    if (!library) return;
+    if (!vaultContract) {
+      alert("Contract not ready or wallet not connected");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const signer = await library.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      const tx = await contract.withdraw();
+      const tx = await vaultContract.withdraw();
       await tx.wait();
 
       const newTx = {
@@ -112,37 +135,56 @@ function App() {
       };
 
       saveTransactions([...transactions, newTx]);
-
       alert("Funds withdrawn by owner.");
     } catch (err) {
       console.error("Withdraw failed", err);
-      alert("Withdraw failed or unauthorized");
+      alert(err.reason || err.data?.message || err.message || "Withdraw failed");
     }
     setIsLoading(false);
   }
 
-  async function fetchNetworkAndBalance() {
-    try {
-      if (library && account) {
-        const network = await library.getNetwork();
-        setNetworkName(network.name);
-
-        const walletBalance = await library.getBalance(account);
-        setEthBalance(ethers.formatEther(walletBalance));
-
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, library);
-        const fetchedOwner = await contract.owner();
-        setOwner(fetchedOwner.toLowerCase());
-      }
-    } catch (err) {
-      console.error("Error getting network or balance", err);
+ async function fetchNetworkAndBalance() {
+  try {
+    if (!vaultContract || !account || !signer) {
+      console.warn("Missing vaultContract, account, or signer", {
+        vaultContract,
+        account,
+        signer,
+      });
+      return;
     }
+
+    // Get network name
+    const network = await signer.provider.getNetwork();
+    setNetworkName(network.name);
+
+    // Get wallet ETH balance
+    const walletBalance = await signer.getBalance();
+    setEthBalance(ethers.formatEther(walletBalance));
+
+    // Get owner of the vault
+    const fetchedOwner = await vaultContract.owner();
+    setOwner(fetchedOwner.toLowerCase());
+
+    // Debug contract ABI methods
+    console.log(
+      "Vault contract methods:",
+      vaultContract.interface.fragments.map((f) => f.name)
+    );
+  } catch (err) {
+    console.error("Error getting network or balance", err);
   }
+  }
+
 
   useEffect(() => {
     const previouslyConnected = localStorage.getItem("walletConnected");
+
     if (previouslyConnected === "true") {
-      activate(injected);
+      console.log("Attempting auto-connect...");
+      activate(injected, undefined, true)
+        .then(() => console.log("Auto-connect success"))
+        .catch((err) => console.error("Auto-reconnect failed:", err));
     }
 
     const saved = localStorage.getItem("vaultTransactions");
@@ -152,10 +194,37 @@ function App() {
   }, [activate]);
 
   useEffect(() => {
-    if (active && account) {
-      fetchNetworkAndBalance();
+  if (active && account && signer && vaultContract) {
+    fetchNetworkAndBalance();
+  } else {
+    console.warn("Waiting for full wallet + signer + contract to be ready...");
+  }
+}, [active, account, signer, vaultContract]);
+
+
+  //Handle MetaMask events - chain change & disconnect
+  useEffect(() => {
+    if (typeof window.ethereum !== "undefined" && active) {
+      const handleChainChanged = () => {
+        window.location.reload();
+      };
+
+      const handleDisconnect = () => {
+        disconnectWallet();
+      };
+
+      window.ethereum.on("chainChanged", handleChainChanged);
+      window.ethereum.on("disconnect", handleDisconnect);
+
+      return () => {
+        window.ethereum.removeListener("chainChanged", handleChainChanged);
+        window.ethereum.removeListener("disconnect", handleDisconnect);
+      };
     }
-  }, [active, account]);
+  }, [active]);
+
+  // Prevent UI if signer or contract is not ready yet
+  const contractReady = vaultContract && signer;
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#0a1f44] text-white px-4">
@@ -177,68 +246,70 @@ function App() {
         )}
 
         {!active ? (
-          <button
-            onClick={connectWallet}
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 transition rounded shadow-md"
-          >
-            Connect Wallet
-          </button>
-        ) : (
-          <>
-            <div className="text-left space-y-1 text-sm text-gray-300 bg-[#091a3e] p-3 rounded shadow-inner">
-              <p className="truncate">Connected: {account}</p>
-              <p>Network: {networkName}</p>
-              <p>Wallet ETH: {Number(ethBalance).toFixed(4)} ETH</p>
-            </div>
+  <button
+    onClick={connectWallet}
+    className="w-full py-2 bg-blue-600 hover:bg-blue-700 transition rounded shadow-md"
+  >
+    Connect Wallet
+  </button>
+) : !signer || !vaultContract ? (
+  <p className="text-yellow-400">⏳ Preparing contract...</p>
+) : (
+  <>
+    <div className="text-left space-y-1 text-sm text-gray-300 bg-[#091a3e] p-3 rounded shadow-inner">
+      <p className="truncate">Connected: {account}</p>
+      <p>Network: {networkName}</p>
+      <p>Wallet ETH: {Number(ethBalance).toFixed(4)} ETH</p>
+    </div>
 
-            <input
-              type="number"
-              placeholder="Enter ETH amount"
-              value={amountToLock}
-              onChange={(e) => setAmountToLock(e.target.value)}
-              className="w-full p-2 text-black rounded shadow-inner"
-            />
+    <input
+      type="number"
+      placeholder="Enter ETH amount"
+      value={amountToLock}
+      onChange={(e) => setAmountToLock(e.target.value)}
+      className="w-full p-2 text-black rounded shadow-inner"
+    />
 
-            <button
-              onClick={lockFunds}
-              className="w-full py-2 bg-green-600 hover:bg-green-700 transition rounded shadow-md"
-              disabled={isLoading}
-            >
-              Lock ETH
-            </button>
+    <button
+      onClick={lockFunds}
+      className="w-full py-2 bg-green-600 hover:bg-green-700 transition rounded shadow-md"
+      disabled={isLoading}
+    >
+      Lock ETH
+    </button>
 
-            <button
-              onClick={getBalance}
-              className="w-full py-2 bg-gray-700 hover:bg-gray-800 transition rounded shadow-md"
-              disabled={isLoading}
-            >
-              Check Locked Balance
-            </button>
+    <button
+      onClick={getBalance}
+      className="w-full py-2 bg-gray-700 hover:bg-gray-800 transition rounded shadow-md"
+      disabled={isLoading}
+    >
+      Check Locked Balance
+    </button>
 
-            {account?.toLowerCase() === owner && (
-              <button
-                onClick={withdrawFunds}
-                className="w-full py-2 bg-yellow-500 hover:bg-yellow-600 transition rounded shadow-md"
-                disabled={isLoading}
-              >
-                Withdraw Funds (Owner Only)
-              </button>
-            )}
+    {account?.toLowerCase() === owner && (
+      <button
+        onClick={withdrawFunds}
+        className="w-full py-2 bg-yellow-500 hover:bg-yellow-600 transition rounded shadow-md"
+        disabled={isLoading}
+      >
+        Withdraw Funds (Owner Only)
+      </button>
+    )}
 
-            <button
-              onClick={disconnectWallet}
-              className="w-full py-2 bg-red-600 hover:bg-red-700 transition rounded shadow-md"
-            >
-              Disconnect Wallet
-            </button>
-          </>
-        )}
+    <button
+      onClick={disconnectWallet}
+      className="w-full py-2 bg-red-600 hover:bg-red-700 transition rounded shadow-md"
+    >
+      Disconnect Wallet
+    </button>
+    </>
+    )}
+
 
         <p className="text-lg text-white font-mono">
           Locked: {Number(balance).toFixed(4)} ETH
         </p>
 
-        {/* Transaction History */}
         {transactions.length > 0 && (
           <div className="text-left mt-4 bg-[#091a3e] p-3 rounded shadow-inner">
             <h3 className="text-[#00ff88] font-bold mb-2">Recent Transactions</h3>
@@ -269,5 +340,3 @@ function App() {
 }
 
 export default App;
-
-

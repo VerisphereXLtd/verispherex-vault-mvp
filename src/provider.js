@@ -3,14 +3,14 @@ import { InjectedConnector } from "@web3-react/injected-connector";
 import { ethers } from "ethers";
 
 const injected = new InjectedConnector({
-  supportedChainIds: [1, 137, 80001],
+  supportedChainIds: [1, 137, 80001, 11155111], // Mainnet, Polygon, Mumbai, Sepolia
 });
 
 function getLibrary(provider) {
   return new ethers.BrowserProvider(provider);
 }
 
-const connectors = () => [[injected, {}]];
+const connectors = [[injected, {}]];
 
 export default function ProviderWrapper({ children }) {
   return (
