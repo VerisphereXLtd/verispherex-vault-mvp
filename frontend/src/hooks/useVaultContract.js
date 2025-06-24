@@ -1,16 +1,10 @@
 import { useMemo } from "react";
 import { Contract, JsonRpcProvider } from "ethers";
-import { useWeb3React } from "@web3-react/core";
 import { CONTRACT_ADDRESS, ABI } from "../abi";
-import useEthersSigner from "./useEthersSigner";
 
-export default function useVaultContract() {
-  const signer = useEthersSigner();
-  const { provider } = useWeb3React();
-
+export default function useVaultContract(signer, provider) {
   return useMemo(() => {
     const fallbackProvider = new JsonRpcProvider(process.env.REACT_APP_SEPOLIA_RPC_URL);
-
     const signerOrProvider = signer ?? provider ?? fallbackProvider;
 
     if (!signerOrProvider || !CONTRACT_ADDRESS || !ABI) {
