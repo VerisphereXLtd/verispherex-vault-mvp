@@ -1,7 +1,6 @@
-# VerisphereX Vault MVP
+# VerisphereX Vault – v2 Escrow & Auto-Withdrawal Update
 
-A minimal decentralized vault MVP for Ethereum, built for VerisphereX.  
-Users can lock ETH, check their locked balance, view transaction history, and the contract owner can withdraw locked funds.
+This version introduces core escrow mechanics and auto-withdrawal functionality into the VerisphereX Vault MVP. Users can now lock ETH, and the contract automatically releases funds after the lock duration expires — creating a trustless escrow experience with zero user friction.
 
 ## Stack
 - React (Frontend)
@@ -9,13 +8,18 @@ Users can lock ETH, check their locked balance, view transaction history, and th
 - Hardhat (Smart Contract Dev)
 - Sepolia Testnet
 
-## Features
-- Wallet connection with MetaMask
-- Lock custom ETH amounts to smart contract
-- View wallet and locked balances
-- Transaction history (with Etherscan links)
-- Withdraw button (owner-only)
-- Fully responsive UI, Tailwind CSS
+## Core Features V2
+Escrow-based ETH Locking
+Users can lock ETH into the smart contract, which holds funds securely for a preset time (default: 3 minutes).
+
+Auto Withdrawal on Unlock
+Once the lock time elapses, the contract automatically triggers a withdrawal back to the user wallet, no manual interaction needed from the user at all.
+
+Transaction History
+Owners can view all LOCK and WITHDRAW events pulled directly from on-chain logs via filters.
+
+User-Specific Balance Queries
+Users can fetch their own locked balances and unlock timestamps.
 
 ## MIT Licence
 
