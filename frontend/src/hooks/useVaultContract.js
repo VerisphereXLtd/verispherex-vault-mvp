@@ -1,24 +1,41 @@
-import { useMemo } from "react";
-import { Contract, JsonRpcProvider } from "ethers";
+import { useEffect, useState } from "react";
+import { Contract, BrowserProvider } from "ethers";
 import { CONTRACT_ADDRESS, ABI } from "../abi";
 
 export default function useVaultContract(signer, provider) {
-  return useMemo(() => {
-    const fallbackProvider = new JsonRpcProvider(process.env.REACT_APP_SEPOLIA_RPC_URL);
-    const signerOrProvider = signer ?? provider ?? fallbackProvider;
+  const [contract, setContract] = useState(null);
 
-    if (!signerOrProvider || !CONTRACT_ADDRESS || !ABI) {
-      console.warn("Vault contract not ready", { signer, provider });
-      return null;
-    }
+  useEffect(() => {
+    const setupContract = async () => {
+      let signerOrProvider = signer ?? provider;
 
-    try {
-      const contract = new Contract(CONTRACT_ADDRESS, ABI, signerOrProvider);
-      console.log("Vault contract initialized:", contract);
-      return contract;
-    } catch (err) {
-      console.error("Contract creation failed:", err);
-      return null;
-    }
+      if (!signerOrProvider && typeof window !== "undefined" && window.ethereum) {
+        try {
+          const browserProvider = new BrowserProvider(window.ethereum);
+          signerOrProvider = await browserProvider.getSigner();
+        } catch (err) {
+          console.error("Failed to create BrowserProvider signer:", err);
+          return;
+        }
+      }
+
+      if (!signerOrProvider || !CONTRACT_ADDRESS || !ABI) {
+        console.warn("Vault contract dependencies not ready.");
+        return;
+      }
+
+      try {
+        const vault = new Contract(CONTRACT_ADDRESS, ABI, signerOrProvider);
+        console.log("Vault contract initialized:", vault);
+        setContract(vault);
+      } catch (err) {
+        console.error("Contract instantiation failed:", err);
+        setContract(null);
+      }
+    };
+
+    setupContract();
   }, [signer, provider]);
+
+  return contract;
 }

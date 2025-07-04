@@ -3,7 +3,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brandWhite: "#e0e0e0", // your soft white brand color
+        brandWhite: "#e0e0e0", // font soft white color
+        vsxblue: "#0ae1f5", // Etherscan link(View on Etherscan) & Recent Transactions
+        vsxgreen: "#00ff88", //Transaction Amount
       },
     },
   },

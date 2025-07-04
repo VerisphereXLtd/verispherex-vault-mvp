@@ -3,6 +3,9 @@ node_modules/
 .env
 .env.local
 .env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
 
 # production
 /build
@@ -44,3 +47,7 @@ gas-report.json
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+
+#Fs
+deployedAddress.json
+
