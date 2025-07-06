@@ -21,7 +21,19 @@ Owners can view all LOCK and WITHDRAW events pulled directly from on-chain logs 
 User-Specific Balance Queries
 Users can fetch their own locked balances and unlock timestamps.
 
+
+## Licensing & Usage Notice
+
+This repository contains a public demo of VerisphereX Vault infrastructure and is intended solely for educational and non-commercial demonstration purposes.
+
+ Commercial use, resale, or production deployment of this code (especially escrow or auto-withdrawal logic) is **not permitted** without express permission from VerisphereX Limited.
+
+ For integration requests, licensing, or commercial partnership, contact: verispherex@gmail.com
+
+
 ## MIT Licence
+
+Note: The MIT License applies only to non-commercial and non-production use of this code.
 
 Copyright (c) 2025 VerisphereX Limited
 
