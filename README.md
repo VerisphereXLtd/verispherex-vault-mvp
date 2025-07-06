@@ -37,4 +37,4 @@ This project is covered under the **VerisphereX Vault – Restricted License**.
 Permission is granted to use, study, and modify this code **only for non-commercial and educational purposes**.  
 Use in live production systems or commercial platforms requires prior written consent.
 
-See the [`LICENSE`](./LICENSE) file for full terms.
+See the [`LICENSE`](./Vsx-Restricted-License) file for full terms.
