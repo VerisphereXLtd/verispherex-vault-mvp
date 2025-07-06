@@ -55,7 +55,7 @@ contract VSXVault {
     uint256 amount = lockedBalances[msg.sender];
     require(amount > 0, "Nothing to withdraw");
 
-    //These rese state before transfer to prevent reentrancy
+    //Resets state before transfer to prevent reentrancy
     lockedBalances[msg.sender] = 0;
     lockedUntil[msg.sender] = 0;
     totalLocked -= amount;
