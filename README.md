@@ -26,31 +26,15 @@ Users can fetch their own locked balances and unlock timestamps.
 
 This repository contains a public demo of VerisphereX Vault infrastructure and is intended solely for educational and non-commercial demonstration purposes.
 
- Commercial use, resale, or production deployment of this code (especially escrow or auto-withdrawal logic) is **not permitted** without express permission from VerisphereX Limited.
+**Commercial use, resale, or production deployment of this code (especially escrow or auto-withdrawal logic) is not permitted without express permission from VerisphereX Limited.**
 
- For integration requests, licensing, or commercial partnership, contact: verispherex@gmail.com
+For integration requests, licensing, or commercial partnership, contact: **verispherex@gmail.com**
 
+## License
 
-## MIT Licence
+This project is covered under the **VerisphereX Vault – Restricted License**.
 
-Note: The MIT License applies only to non-commercial and non-production use of this code.
+Permission is granted to use, study, and modify this code **only for non-commercial and educational purposes**.  
+Use in live production systems or commercial platforms requires prior written consent.
 
-Copyright (c) 2025 VerisphereX Limited
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights  
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell  
-copies of the Software, and to permit persons to whom the Software is  
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all  
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR  
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE  
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER  
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,  
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  
-SOFTWARE.
+See the [`LICENSE`](./LICENSE) file for full terms.
