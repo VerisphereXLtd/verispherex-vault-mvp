@@ -314,13 +314,16 @@ function App() {
     console.log("Unlock time in ms after conversion:", unlockTime); // Log the value in milliseconds
 
     const timeLeft = unlockTime - Date.now();
+    console.log(timeLeft);
 
     if (timeLeft <= 0) {
       clearInterval(interval); // Stop the interval after auto-withdrawal
       setCountdown(null);
       withdrawFunds();  //Calls withdraw function after the countdown ends
+      localStorage.removeItem("unlockTime");
     } else {
-      setCountdown(Math.floor(timeLeft / 1000));  // Convert to secs and set the countdown
+     setCountdown(Math.floor(timeLeft / 1000));
+     console.log(countdown);  // Convert to secs and set the countdown
     }
   }, 1000);
 
